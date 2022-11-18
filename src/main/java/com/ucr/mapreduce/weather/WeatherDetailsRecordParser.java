@@ -1,0 +1,54 @@
+package com.ucr.mapreduce.weather;
+
+import java.io.Serializable;
+
+import org.apache.log4j.Logger;
+
+public class WeatherDetailsRecordParser implements Serializable {
+	private static Logger logger = Logger.getLogger(WeatherDetailsRecordParser.class);
+	private static final long serialVersionUID = 1234567L;
+	private String month;
+	private String usafID;
+	private String temperature;
+	private String readingCount;
+
+	public void parse(String record) {
+		// \s+ matches all the space characters (single or multiple)
+		String[] attributes = record.split("\\s+");
+		if (MapReduceUtils.stringIsNotBlank(attributes[0])) {
+			logger.info("Record found with valid USAF id in weather details file " + attributes[0] + " " + attributes[2]
+					+ " " + attributes[3]);
+			String parsedStn = attributes[0];
+			String parsedDate = attributes[2];
+			String parsedTemperature = attributes[3];
+			String rCount = attributes[4];
+			this.usafID = parsedStn;
+			if (MapReduceUtils.stringIsNotBlank(parsedDate) && parsedDate.length() == 8)
+				this.month = parsedDate.substring(4, 6);
+			if (MapReduceUtils.stringIsNotBlank(parsedTemperature))
+				this.temperature = parsedTemperature;
+			if (MapReduceUtils.stringIsNotBlank(rCount))
+				this.readingCount = rCount;
+			logger.info(
+					"Record Found with valid USAF id in weather details file " + temperature + " " + month + " " + usafID+ " "+ readingCount);
+
+		}
+	}
+
+	public String getTemperature() {
+		return temperature;
+	}
+
+	public String getMonth() {
+		return month;
+	}
+
+	public String getUsafID() {
+		return usafID;
+	}
+
+	public String getReadingCount() {
+		return readingCount;
+	}
+
+}
