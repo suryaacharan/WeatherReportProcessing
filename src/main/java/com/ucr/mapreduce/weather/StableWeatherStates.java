@@ -138,7 +138,8 @@ public class StableWeatherStates extends Configured implements Tool {
 
 		}
 	}
-	
+	//input key<STATE_Month> monthly avg
+	//Output key<State> value<month_avg>
 	public static class MapClassForJob3 extends Mapper<LongWritable, Text, Text, Text> {
 		private Text word = new Text();
 		private Text values = new Text();
@@ -162,27 +163,10 @@ public class StableWeatherStates extends Configured implements Tool {
 			}
 		}
 	}
-	
-	public static class MapClassForJob4 extends Mapper<LongWritable, Text, DoubleWritable, Text> {
 
-		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-			String line = value.toString();
-			StringTokenizer itr = new StringTokenizer(line, "\n");
-			while (itr.hasMoreTokens()) {
-				String str = itr.nextToken();
-				String[] attr = str.split("\\s+");
-				String diff = attr[0];
-				String vec = attr[1];
-				if (MapReduceUtils.stringIsNotBlank(diff) && MapReduceUtils.stringIsNotBlank(vec)) {
-
-					context.write(new DoubleWritable(MapReduceUtils.getDoubleFromString(diff)), new Text(vec));
-				}
-			}
-		}
-	}	
-	
 	//Use of combiner for avg
 	//Input from MapJob2 key<STATE_Month> value<usafID_Avg Temp*NoOfReadings>
+	//Output key<STATE_Month>  value<avg*count>
 	
 	public static class CombinerForJob2 extends Reducer<Text, Text, Text, Text> {
 		  @Override
@@ -214,6 +198,8 @@ public class StableWeatherStates extends Configured implements Tool {
 		  };
 	}
 	
+	//Input key<STATE_Month>  value<avg*count>
+	//Output key<STATE_Month> monthly avg
 	public static class ReduceForJob2 extends Reducer<Text, Text, Text, Text> {
 
 		@Override
@@ -242,6 +228,7 @@ public class StableWeatherStates extends Configured implements Tool {
 	}
 	
 	//Input(after shuffle and sort) State   Month1_Avg1 Month2_Avg2
+	//Ouput key<State> <Max> <Min> <Difference>
 	public static class ReducerForJob3 extends Reducer<Text, Text, Text, Text> {
 		
 		TreeMap<Double, String> sortedMap = new TreeMap<Double, String>();
