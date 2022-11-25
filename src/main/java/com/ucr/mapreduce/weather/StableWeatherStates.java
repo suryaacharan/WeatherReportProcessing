@@ -42,49 +42,6 @@ public class StableWeatherStates extends Configured implements Tool {
 	private static Logger logger = Logger.getLogger(StableWeatherStates.class);
 	final long DEFAULT_SPLIT_SIZE = 128 * 1024 * 1024;
 
-	/*
-	 * public static class MapClassForJob4 extends Mapper<LongWritable, Text,
-	 * DoubleWritable, Text> {
-	 * 
-	 * public void map(LongWritable key, Text value, Context context) throws
-	 * IOException, InterruptedException { String line = value.toString();
-	 * StringTokenizer itr = new StringTokenizer(line, "\n"); while
-	 * (itr.hasMoreTokens()) { String str = itr.nextToken(); String[] attr =
-	 * str.split("\\s+"); String diff = attr[0]; String vec = attr[1]; if
-	 * (MapReduceUtils.stringIsNotBlank(diff) &&
-	 * MapReduceUtils.stringIsNotBlank(vec)) {
-	 * 
-	 * context.write(new DoubleWritable(MapReduceUtils.getDoubleFromString(diff)),
-	 * new Text(vec)); } } } }
-	 */
-
-	// Input(after shuffle and sort) State Diff_Max_Min
-	/*
-	 * public static class ReducerForJob4 extends Reducer<DoubleWritable, Text,
-	 * Text, Text> { private Text values = new Text();
-	 * 
-	 * @Override protected void setup(Context context) throws IOException { try {
-	 * context.write(new Text("State"), new Text("Difference Maximum Minimum")); }
-	 * catch (IOException e) { logger.info("IOException at ReducerForJob4"); } catch
-	 * (InterruptedException e) {
-	 * logger.info("InterruptedException at ReducerForJob4"); }
-	 * 
-	 * }
-	 * 
-	 * @Override protected void reduce(DoubleWritable key, Iterable<Text> values,
-	 * Context context) throws IOException, InterruptedException {
-	 * 
-	 * final Iterator<Text> itr = values.iterator(); while (itr.hasNext()) { String
-	 * vect = itr.next().toString(); logger.info("rox1 : "+vect); String[] elem =
-	 * vect.split("_"); values
-	 * 
-	 * }
-	 * 
-	 * context.write(new Text(difference.toString()), new
-	 * Text(key.toString().concat("_").concat(max.toString()).concat("_").concat(min
-	 * .toString()))); } }
-	 */
-
 	static int printUsage() {
 		System.out.println("weather [-m <maps>] [-r <reduces>] <job_1 input> <job_1 output> <job_2 input>");
 		ToolRunner.printGenericCommandUsage(System.out);
