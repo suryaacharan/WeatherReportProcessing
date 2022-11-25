@@ -11,6 +11,7 @@ public class WeatherDetailsRecordParser implements Serializable {
 	private String usafID;
 	private String temperature;
 	private String readingCount;
+	private String precipitation;
 
 	public void parse(String record) {
 		// \s+ matches all the space characters (single or multiple)
@@ -22,19 +23,25 @@ public class WeatherDetailsRecordParser implements Serializable {
 			String parsedDate = attributes[2];
 			String parsedTemperature = attributes[3];
 			String rCount = attributes[4];
+			String parsedPrecipitation = attributes[19];
+			parsedPrecipitation = parsedPrecipitation.replaceAll("[^0-9.]","");
 			this.usafID = parsedStn;
 			if (MapReduceUtils.stringIsNotBlank(parsedDate) && parsedDate.length() == 8)
 				this.month = parsedDate.substring(4, 6);
 			if (MapReduceUtils.stringIsNotBlank(parsedTemperature))
 				this.temperature = parsedTemperature;
+			if (MapReduceUtils.stringIsNotBlank(parsedPrecipitation))
+				this.precipitation = parsedPrecipitation;
 			if (MapReduceUtils.stringIsNotBlank(rCount))
 				this.readingCount = rCount;
 			logger.info(
 					"Record Found with valid USAF id in weather details file " + temperature + " " + month + " " + usafID+ " "+ readingCount);
-
 		}
 	}
 
+	public String getPrecipitation() {
+		return precipitation;
+	}
 	public String getTemperature() {
 		return temperature;
 	}
