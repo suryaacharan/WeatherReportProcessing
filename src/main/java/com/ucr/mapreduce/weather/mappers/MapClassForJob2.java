@@ -11,8 +11,8 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-import com.ucr.mapreduce.weather.MapReduceUtils;
-import com.ucr.mapreduce.weather.WeatherDetailsRecordParser;
+import com.ucr.mapreduce.weather.parsers.WeatherDetailsRecordParser;
+import com.ucr.mapreduce.weather.utils.MapReduceUtils;
 
 //Input - txt files with weather data
 //Output - key<STATE_Month> value<usafID_Avg Temp*NoOfReadings>

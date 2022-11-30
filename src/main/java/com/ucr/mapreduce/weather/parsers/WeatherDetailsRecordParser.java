@@ -1,8 +1,10 @@
-package com.ucr.mapreduce.weather;
+package com.ucr.mapreduce.weather.parsers;
 
 import java.io.Serializable;
 
 import org.apache.log4j.Logger;
+
+import com.ucr.mapreduce.weather.utils.MapReduceUtils;
 
 public class WeatherDetailsRecordParser implements Serializable {
 	private static Logger logger = Logger.getLogger(WeatherDetailsRecordParser.class);

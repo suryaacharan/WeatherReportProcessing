@@ -7,7 +7,7 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
-import com.ucr.mapreduce.weather.MapReduceUtils;
+import com.ucr.mapreduce.weather.utils.MapReduceUtils;
 
 public class MapClassForJob3 extends Mapper<LongWritable, Text, Text, Text> {
 		private Text word = new Text();

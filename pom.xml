@@ -62,7 +62,7 @@
               <configuration>
                   <archive>
                       <manifest>
-                          <mainClass>com.ucr.mapreduce.weather.StableWeatherStates</mainClass>
+                          <mainClass>com.ucr.mapreduce.weather.job.StableWeatherStatesJobRunner</mainClass>
                       </manifest>
                   </archive>
               </configuration>

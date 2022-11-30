@@ -7,13 +7,13 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.log4j.Logger;
 
-import com.ucr.mapreduce.weather.MapReduceUtils;
-import com.ucr.mapreduce.weather.StableWeatherStates;
+import com.ucr.mapreduce.weather.job.StableWeatherStatesJobRunner;
+import com.ucr.mapreduce.weather.utils.MapReduceUtils;
 
 //Use of combiner for avg
 //Input from MapJob2 key<STATE_Month> value<usafID_Avg Temp*NoOfReadings>	
 public class CombinerForJob2 extends Reducer<Text, Text, Text, Text> {
-	private static Logger logger = Logger.getLogger(StableWeatherStates.class);
+	private static Logger logger = Logger.getLogger(StableWeatherStatesJobRunner.class);
 	@Override
 	protected void reduce(final Text key, final Iterable<Text> values,
     final Context context) throws IOException, InterruptedException {

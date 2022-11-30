@@ -11,13 +11,12 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.log4j.Logger;
 
-import com.ucr.mapreduce.weather.MapReduceUtils;
-import com.ucr.mapreduce.weather.StableWeatherStates;
-import com.ucr.mapreduce.weather.WeatherDetailsRecordParser;
+import com.ucr.mapreduce.weather.job.StableWeatherStatesJobRunner;
+import com.ucr.mapreduce.weather.utils.MapReduceUtils;
 
 //Input(after shuffle and sort) State   Month1_Avg1 Month2_Avg2
 public class ReducerForJob3 extends Reducer<Text, Text, Text, Text> {
-	private static Logger logger = Logger.getLogger(StableWeatherStates.class);
+	private static Logger logger = Logger.getLogger(StableWeatherStatesJobRunner.class);
 	TreeMap<Double, String> sortedMap = new TreeMap<Double, String>();
 
 	@Override

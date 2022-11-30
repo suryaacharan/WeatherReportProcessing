@@ -1,15 +1,6 @@
-package com.ucr.mapreduce.weather;
+package com.ucr.mapreduce.weather.job;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.StringTokenizer;
-import java.util.TreeMap;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -17,12 +8,8 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
-import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
@@ -37,13 +24,14 @@ import com.ucr.mapreduce.weather.mappers.MapClassForJob3;
 import com.ucr.mapreduce.weather.reducers.CombinerForJob2;
 import com.ucr.mapreduce.weather.reducers.ReduceForJob2;
 import com.ucr.mapreduce.weather.reducers.ReducerForJob3;
+import com.ucr.mapreduce.weather.utils.MapReduceConstants;
 
-public class StableWeatherStates extends Configured implements Tool {
-	private static Logger logger = Logger.getLogger(StableWeatherStates.class);
+public class StableWeatherStatesJobRunner extends Configured implements Tool {
+	private static Logger logger = Logger.getLogger(StableWeatherStatesJobRunner.class);
 	final long DEFAULT_SPLIT_SIZE = 128 * 1024 * 1024;
 
 	static int printUsage() {
-		System.out.println("weather [-m <maps>] [-r <reduces>] <job_1 input> <job_1 output> <job_2 input>");
+		System.out.println("hadoop jar <pathToJar> <pathToWeatherStationLocationsinHDFS> <pathToDirectoryOfTxtFiles> <outputDirForJob1> <outputDirForJob2> <outputDirForJob3> | optional -include_approx");
 		ToolRunner.printGenericCommandUsage(System.out);
 		return -1;
 	}
@@ -57,62 +45,47 @@ public class StableWeatherStates extends Configured implements Tool {
 	 */
 	public int run(String[] args) throws Exception {
 		Configuration config = getConf();
-
-		Job job = Job.getInstance(config, "StableWeatherStates");
-
-		job.setJobName("Get US StableWeatherStates Stations with State");
+		if(args.length<5)
+			printUsage();
+		
+		if(args.length>5 && args[5].contains(MapReduceConstants.INCLUDE_APPROX))
+			config.set(MapReduceConstants.INCLUDE_APPROX, MapReduceConstants.INCLUDE_APPROX);
+		Job job = Job.getInstance(config, "StableWeatherStatesJobRunner");
+		job.setJobName("Get US StableWeatherStatesJobRunner Stations with State");
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
-		job.setJarByClass(StableWeatherStates.class);
+		job.setJarByClass(StableWeatherStatesJobRunner.class);
 		job.setMapperClass(MapClass.class);
 
-		List<String> other_args = new ArrayList<String>();
-		for (int i = 0; i < args.length; ++i) {
-			try {
-				if ("-m".equals(args[i])) {
-					// job.setNumMapTasks(Integer.parseInt(args[++i]));
-				} else if ("-r".equals(args[i])) {
-					job.setNumReduceTasks(Integer.parseInt(args[++i]));
-				} else {
-					other_args.add(args[i]);
-				}
-			} catch (NumberFormatException except) {
-				System.out.println("ERROR: Integer expected instead of " + args[i]);
-				return printUsage();
-			} catch (ArrayIndexOutOfBoundsException except) {
-				System.out.println("ERROR: Required parameter missing from " + args[i - 1]);
-				return printUsage();
-			}
-		}
-
 		job.setNumReduceTasks(0);
-		FileInputFormat.addInputPath(job, new Path(other_args.get(0)));
-		FileOutputFormat.setOutputPath(job, new Path(other_args.get(2)));
+		FileInputFormat.addInputPath(job, new Path(args[0]));
+		FileOutputFormat.setOutputPath(job, new Path(args[2]));
 
-		Job job2 = Job.getInstance(config, "StableWeatherStates-2");
-
+		Job job2 = Job.getInstance(config, "StableWeatherStatesJobRunner-2");
 		job2.setJobName("MonthlyAverage");
 		job2.setOutputKeyClass(Text.class);
 		job2.setOutputValueClass(Text.class);
-		job2.setJarByClass(StableWeatherStates.class);
-		// job2.setMapperClass(MapClassForJob2.class);
+		job2.setJarByClass(StableWeatherStatesJobRunner.class);
 		job2.setCombinerClass(CombinerForJob2.class);
 		job2.setReducerClass(ReduceForJob2.class);
-		//job2.setNumReduceTasks(0);
+		
 		job.waitForCompletion(true);
+		
 		// Passing the output of job1 to job2 as distributed cache
 		FileSystem fs = FileSystem.get(config);
-		FileStatus[] fileList = fs.listStatus(new Path(other_args.get(2)), new PathFilter() {
+		FileStatus[] fileList = fs.listStatus(new Path(args[2]), new PathFilter() {
 			@Override
 			public boolean accept(Path path) {
 				return path.getName().startsWith("part-");
 			}
 		});
+		
 		for (int i = 0; i < fileList.length; i++) {
 			job2.addCacheFile(fileList[i].getPath().toUri());
 		}
+		
 		// Getting all text files in input directory
-		FileStatus[] annualWeatherFileList = fs.listStatus(new Path(other_args.get(1)), new PathFilter() {
+		FileStatus[] annualWeatherFileList = fs.listStatus(new Path(args[1]), new PathFilter() {
 			@Override
 			public boolean accept(Path path) {
 				return path.getName().endsWith(".txt");
@@ -124,40 +97,36 @@ public class StableWeatherStates extends Configured implements Tool {
 			MultipleInputs.addInputPath(job2, annualWeatherFileList[i].getPath(), TextInputFormat.class,
 					MapClassForJob2.class);
 		}
-		// FileInputFormat.addInputPath(job2, new Path(other_args.get(2)));
-		FileOutputFormat.setOutputPath(job2, new Path(other_args.get(3)));
-
+		FileOutputFormat.setOutputPath(job2, new Path(args[3]));
 		job2.waitForCompletion(true);
 
-		Job job3 = Job.getInstance(config, "StableWeatherStates-3");
-
+		Job job3 = Job.getInstance(config, "StableWeatherStatesJobRunner-3");
 		job3.setJobName("MinMaxTemp");
 		job3.setOutputKeyClass(Text.class);
 		job3.setOutputValueClass(Text.class);
-		job3.setJarByClass(StableWeatherStates.class);
+		job3.setJarByClass(StableWeatherStatesJobRunner.class);
 		job3.setMapperClass(MapClassForJob3.class);
 		job3.setReducerClass(ReducerForJob3.class);
 
 		// Passing the output of job2 to job3 as Input
-		fileList = fs.listStatus(new Path(other_args.get(3)), new PathFilter() {
+		fileList = fs.listStatus(new Path(args[3]), new PathFilter() {
 			@Override
 			public boolean accept(Path path) {
 				return path.getName().startsWith("part-");
 			}
 		});
+		
 		for (int i = 0; i < fileList.length; i++) {
 			FileInputFormat.addInputPath(job3, fileList[i].getPath());
 		}
 
-		FileOutputFormat.setOutputPath(job3, new Path(other_args.get(4)));
-
+		FileOutputFormat.setOutputPath(job3, new Path(args[4]));
 		job3.waitForCompletion(true);
-
 		return 0;
 	}
 
 	public static void main(String[] args) throws Exception {
-		int res = ToolRunner.run(new Configuration(), new StableWeatherStates(), args);
+		int res = ToolRunner.run(new Configuration(), new StableWeatherStatesJobRunner(), args);
 		System.exit(res);
 	}
 
